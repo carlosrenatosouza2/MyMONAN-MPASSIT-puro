@@ -1,0 +1,81 @@
+20260608 185623.042 INFO             PET03 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+20260608 185623.042 INFO             PET03 !!! THE ESMF_LOG IS SET TO OUTPUT ALL LOG MESSAGES !!!
+20260608 185623.042 INFO             PET03 !!!     THIS MAY CAUSE SLOWDOWN IN PERFORMANCE     !!!
+20260608 185623.042 INFO             PET03 !!! FOR PRODUCTION RUNS, USE:                      !!!
+20260608 185623.042 INFO             PET03 !!!                   ESMF_LOGKIND_Multi_On_Error  !!!
+20260608 185623.042 INFO             PET03 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+20260608 185623.042 INFO             PET03 Running with ESMF Version   : 8.9.1
+20260608 185623.042 INFO             PET03 ESMF library build date/time: "Jun  8 2026" "18:25:42"
+20260608 185623.042 INFO             PET03 ESMF library build location : /lustre/projetos/monan_adm/carlos.souza/ESMF/esmf-8.9.1
+20260608 185623.042 INFO             PET03 ESMF_COMM                   : mpich2
+20260608 185623.043 INFO             PET03 ESMF_MOAB                   : enabled
+20260608 185623.043 INFO             PET03 ESMF_LAPACK                 : enabled
+20260608 185623.043 INFO             PET03 ESMF_NETCDF                 : enabled
+20260608 185623.043 INFO             PET03 ESMF_PNETCDF                : enabled
+20260608 185623.043 INFO             PET03 ESMF_PIO                    : enabled
+20260608 185623.043 INFO             PET03 ESMF_YAMLCPP                : enabled
+20260608 190547.999 INFO             PET03 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+20260608 190547.999 INFO             PET03 !!! THE ESMF_LOG IS SET TO OUTPUT ALL LOG MESSAGES !!!
+20260608 190547.999 INFO             PET03 !!!     THIS MAY CAUSE SLOWDOWN IN PERFORMANCE     !!!
+20260608 190547.999 INFO             PET03 !!! FOR PRODUCTION RUNS, USE:                      !!!
+20260608 190547.999 INFO             PET03 !!!                   ESMF_LOGKIND_Multi_On_Error  !!!
+20260608 190547.999 INFO             PET03 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+20260608 190547.999 INFO             PET03 Running with ESMF Version   : 8.9.1
+20260608 190547.999 INFO             PET03 ESMF library build date/time: "Jun  8 2026" "18:25:42"
+20260608 190547.999 INFO             PET03 ESMF library build location : /lustre/projetos/monan_adm/carlos.souza/ESMF/esmf-8.9.1
+20260608 190547.999 INFO             PET03 ESMF_COMM                   : mpich2
+20260608 190548.012 INFO             PET03 ESMF_MOAB                   : enabled
+20260608 190548.012 INFO             PET03 ESMF_LAPACK                 : enabled
+20260608 190548.012 INFO             PET03 ESMF_NETCDF                 : enabled
+20260608 190548.012 INFO             PET03 ESMF_PNETCDF                : enabled
+20260608 190548.012 INFO             PET03 ESMF_PIO                    : enabled
+20260608 190548.012 INFO             PET03 ESMF_YAMLCPP                : enabled
+20260608 191547.310 INFO             PET03 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+20260608 191547.310 INFO             PET03 !!! THE ESMF_LOG IS SET TO OUTPUT ALL LOG MESSAGES !!!
+20260608 191547.310 INFO             PET03 !!!     THIS MAY CAUSE SLOWDOWN IN PERFORMANCE     !!!
+20260608 191547.310 INFO             PET03 !!! FOR PRODUCTION RUNS, USE:                      !!!
+20260608 191547.310 INFO             PET03 !!!                   ESMF_LOGKIND_Multi_On_Error  !!!
+20260608 191547.310 INFO             PET03 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+20260608 191547.310 INFO             PET03 Running with ESMF Version   : 8.9.1
+20260608 191547.310 INFO             PET03 ESMF library build date/time: "Jun  8 2026" "18:25:42"
+20260608 191547.310 INFO             PET03 ESMF library build location : /lustre/projetos/monan_adm/carlos.souza/ESMF/esmf-8.9.1
+20260608 191547.310 INFO             PET03 ESMF_COMM                   : mpich2
+20260608 191547.327 INFO             PET03 ESMF_MOAB                   : enabled
+20260608 191547.327 INFO             PET03 ESMF_LAPACK                 : enabled
+20260608 191547.327 INFO             PET03 ESMF_NETCDF                 : enabled
+20260608 191547.327 INFO             PET03 ESMF_PNETCDF                : enabled
+20260608 191547.327 INFO             PET03 ESMF_PIO                    : enabled
+20260608 191547.327 INFO             PET03 ESMF_YAMLCPP                : enabled
+20260608 192545.464 INFO             PET03 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+20260608 192545.464 INFO             PET03 !!! THE ESMF_LOG IS SET TO OUTPUT ALL LOG MESSAGES !!!
+20260608 192545.464 INFO             PET03 !!!     THIS MAY CAUSE SLOWDOWN IN PERFORMANCE     !!!
+20260608 192545.464 INFO             PET03 !!! FOR PRODUCTION RUNS, USE:                      !!!
+20260608 192545.464 INFO             PET03 !!!                   ESMF_LOGKIND_Multi_On_Error  !!!
+20260608 192545.464 INFO             PET03 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+20260608 192545.464 INFO             PET03 Running with ESMF Version   : 8.9.1
+20260608 192545.464 INFO             PET03 ESMF library build date/time: "Jun  8 2026" "18:25:42"
+20260608 192545.464 INFO             PET03 ESMF library build location : /lustre/projetos/monan_adm/carlos.souza/ESMF/esmf-8.9.1
+20260608 192545.464 INFO             PET03 ESMF_COMM                   : mpich2
+20260608 192545.465 INFO             PET03 ESMF_MOAB                   : enabled
+20260608 192545.465 INFO             PET03 ESMF_LAPACK                 : enabled
+20260608 192545.465 INFO             PET03 ESMF_NETCDF                 : enabled
+20260608 192545.465 INFO             PET03 ESMF_PNETCDF                : enabled
+20260608 192545.465 INFO             PET03 ESMF_PIO                    : enabled
+20260608 192545.465 INFO             PET03 ESMF_YAMLCPP                : enabled
+20260608 193200.237 INFO             PET03 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+20260608 193200.237 INFO             PET03 !!! THE ESMF_LOG IS SET TO OUTPUT ALL LOG MESSAGES !!!
+20260608 193200.237 INFO             PET03 !!!     THIS MAY CAUSE SLOWDOWN IN PERFORMANCE     !!!
+20260608 193200.237 INFO             PET03 !!! FOR PRODUCTION RUNS, USE:                      !!!
+20260608 193200.237 INFO             PET03 !!!                   ESMF_LOGKIND_Multi_On_Error  !!!
+20260608 193200.237 INFO             PET03 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+20260608 193200.237 INFO             PET03 Running with ESMF Version   : 8.9.1
+20260608 193200.237 INFO             PET03 ESMF library build date/time: "Jun  8 2026" "18:25:42"
+20260608 193200.237 INFO             PET03 ESMF library build location : /lustre/projetos/monan_adm/carlos.souza/ESMF/esmf-8.9.1
+20260608 193200.237 INFO             PET03 ESMF_COMM                   : mpich2
+20260608 193200.238 INFO             PET03 ESMF_MOAB                   : enabled
+20260608 193200.238 INFO             PET03 ESMF_LAPACK                 : enabled
+20260608 193200.238 INFO             PET03 ESMF_NETCDF                 : enabled
+20260608 193200.238 INFO             PET03 ESMF_PNETCDF                : enabled
+20260608 193200.238 INFO             PET03 ESMF_PIO                    : enabled
+20260608 193200.238 INFO             PET03 ESMF_YAMLCPP                : enabled
+20260608 193342.537 INFO             PET03  Finalizing ESMF with endflag==ESMF_END_KEEPMPI

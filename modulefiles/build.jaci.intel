@@ -1,0 +1,21 @@
+#%Module#####################################################
+## Build and run module for Jaci
+#############################################################
+
+module purge
+module load PrgEnv-intel
+module load cray-netcdf-hdf5parallel
+module load craype/2.7.33
+module load cray-mpich/8.1.31
+module load cray-hdf5-parallel/1.14.3.3
+module load cray-netcdf-hdf5parallel/4.9.0.15
+module load cray-parallel-netcdf/1.12.3.15
+module load craype-x86-turin
+module load esmf
+
+
+setenv CMAKE_C_COMPILER icc
+setenv CMAKE_Fortran_COMPILER ifort
+
+export NETCDF=${NETCDF_DIR}
+
