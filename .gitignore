@@ -30,8 +30,11 @@
 *.exe
 *.out
 *.app
+*.err
 mpassit
 
 #
 /bin
 /build
+/run/*LogFile
+/run/*.nc
