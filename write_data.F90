@@ -23,8 +23,9 @@ contains
         use netcdf
         use mpi
 
+         !CR:
         use program_setup, only: interp_diag, interp_hist, &
-                                 wrf_mod_vars, truelat1, truelat2, &
+                                 wrf_mod_vars, output_grads, truelat1, truelat2, &
                                  stand_lon, proj_code, map_proj_char, &
                                  i_target, j_target, dx, &
                                  ref_lat, ref_lon, pole_lat, &

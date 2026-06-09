@@ -31,7 +31,11 @@
  logical, public                 :: interp_hist = .false. !< Read data from hist file?
  logical, public                 :: wrf_mod_vars = .false.!< Whether to modify variable values/dimensions 
                                                           !< to conform to WRF format. Set to true for
-                                                          !< UPP-compatible output
+  
+ !CR:                                                         !< UPP-compatible output
+ logical, public                 :: output_grads = .false.!< If true, write output in GrADS-compatible 
+                                                          !< NetCDF format (1D coordinate variables,
+                                                          !< CF-compliant dimension names)                                                          
  character(len=500), public      :: target_grid_type      !< Grid type to interpolate data to
                                                           !< Valid options: 'file', 'lambert',
                                                           !< 'mercator','polar',lat-lon'     
@@ -105,9 +109,9 @@
  !Namelist variables that are used to create global variables
  integer                                :: nx,ny
 
- namelist /config/ grid_file_input_grid, diag_file_input_grid, hist_file_input_grid, &
+namelist /config/ grid_file_input_grid, diag_file_input_grid, hist_file_input_grid, &
             file_target_grid, output_file, interp_diag, interp_hist, &
-            wrf_mod_vars, esmf_log,target_grid_type,nx,ny,dx,dy,ref_lat,ref_lon,ref_x,ref_y,&
+            wrf_mod_vars, output_grads, esmf_log,target_grid_type,nx,ny,dx,dy,ref_lat,ref_lon,ref_x,ref_y,&
             truelat1,truelat2,stand_lon,is_regional,pole_lat,pole_lon, interp_as_bundle,block_decomp_file, &
             missing_value
 
