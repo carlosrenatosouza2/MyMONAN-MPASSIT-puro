@@ -98,6 +98,7 @@ contains
         character(len=50)                :: varname
         character(len=20)                :: tempstr(1, 19)
         integer, parameter               :: Datestrlen = 19
+        character(len=20)                :: coord_att_2d, coord_att_3d, coord_att_z
         integer                          :: error, ncid, n, rc, i, j, k, m
         integer                          :: header_buffer_val = 16384
         integer                          :: dim_time, dim_lon, dim_lat, dim_z, dim_zp1, dim_soil
@@ -141,6 +142,16 @@ contains
         allocate (dumsmall(nsoil_input, 1))
         allocate (dum3d(i_target, j_target, nz_input))
         allocate (dum1d(1))
+        
+        if (output_grads) then
+            coord_att_2d = "lon lat"
+            coord_att_3d = "lon lat time"
+            coord_att_z  = "lon lat"
+        else
+            coord_att_2d = "XLONG XLAT"
+            coord_att_3d = "XLONG XLAT XTIME"
+            coord_att_z  = "XLAT XLONG"
+        end if
 
 !--- open the file
             error = nf90_create_par(output_file, NF90_NETCDF4, &
@@ -151,7 +162,12 @@ contains
        !if (localpet==0 ) then
             !--- define dimension
             !--- CR:
-            error = nf90_def_dim(ncid, 'Time', NF90_UNLIMITED, dim_time)
+
+            if (output_grads) then
+                error = nf90_def_dim(ncid, 'time', NF90_UNLIMITED, dim_time)
+            else
+                error = nf90_def_dim(ncid, 'Time', NF90_UNLIMITED, dim_time)
+            end if
             call netcdf_err(error, 'DEFINING Time DIMENSION')
             if (output_grads) then
                 error = nf90_def_dim(ncid, 'lon', i_target, dim_lon)
@@ -439,7 +455,7 @@ contains
             call netcdf_err(error, 'DEFINING MAPFAC_M UNITS')
             error = nf90_put_att(ncid, id_mfm, "MemoryOrder", "XY ")
             call netcdf_err(error, 'DEFINING MEMORYORDER')
-            error = nf90_put_att(ncid, id_mfm, "coordinates", "XLONG XLAT")
+            error = nf90_put_att(ncid, id_mfm, "coordinates", coord_att_2d)
             call netcdf_err(error, 'DEFINING COORD')
             error = nf90_put_att(ncid, id_mfm, "stagger", " ")
             call netcdf_err(error, 'DEFINING STAGGER')
@@ -494,7 +510,7 @@ contains
                call netcdf_err(error, 'DEFINING MAPFAC_M UNITS')
                error = nf90_put_att(ncid, id_sina, "MemoryOrder", "XY ")
                call netcdf_err(error, 'DEFINING MEMORYORDER')
-               error = nf90_put_att(ncid, id_sina, "coordinates", "XLONG XLAT")
+               error = nf90_put_att(ncid, id_sina, "coordinates", coord_att_2d)
                call netcdf_err(error, 'DEFINING COORD')
                error = nf90_put_att(ncid, id_sina, "stagger", " ")
                call netcdf_err(error, 'DEFINING STAGGER')
@@ -507,7 +523,7 @@ contains
                call netcdf_err(error, 'DEFINING COAALPHA FIELD')
                error = nf90_put_att(ncid, id_cosa, "description", "COSINE OF GRID ROTATION ANGLE ALPHA")
             
-               error = nf90_put_att(ncid, id_cosa, "coordinates", "XLONG XLAT")
+               error = nf90_put_att(ncid, id_cosa, "coordinates", coord_att_2d)
                call netcdf_err(error, 'DEFINING COORD')
                error = nf90_put_att(ncid, id_cosa, "stagger", " ")
                call netcdf_err(error, 'DEFINING STAGGER')
@@ -525,7 +541,7 @@ contains
             call netcdf_err(error, 'DEFINING Z_C UNITS')
             error = nf90_put_att(ncid, id_z, "MemoryOrder", "XYZ ")
             call netcdf_err(error, 'DEFINING MEMORYORDER')
-            error = nf90_put_att(ncid, id_z, "coordinates", "XLAT XLONG Z_C")
+            error = nf90_put_att(ncid, id_z, "coordinates", trim(coord_att_z)//" Z_C")
             call netcdf_err(error, 'DEFINING COORD')
             error = nf90_put_att(ncid, id_z, "stagger", "")
             call netcdf_err(error, 'DEFINING STAGGER')
@@ -559,7 +575,7 @@ contains
             call netcdf_err(error, 'DEFINING HGT UNITS')
             error = nf90_put_att(ncid, id_hgt, "MemoryOrder", "XY ")
             call netcdf_err(error, 'DEFINING MEMORYORDER')
-            error = nf90_put_att(ncid, id_hgt, "coordinates", "XLAT XLONG ")
+            error = nf90_put_att(ncid, id_hgt, "coordinates", coord_att_2d)
             call netcdf_err(error, 'DEFINING COORD')
             error = nf90_put_att(ncid, id_hgt, "stagger", "")
             call netcdf_err(error, 'DEFINING STAGGER')
@@ -658,7 +674,7 @@ contains
                      call netcdf_err(error, 'DEFINING VAR')
                      error = nf90_put_att(ncid, id_vars2(k), "MemoryOrder", "XY ")
                      call netcdf_err(error, 'DEFINING MEMORYORDER')
-                     error = nf90_put_att(ncid, id_vars2(k), "coordinates", "XLONG XLAT XTIME")
+                     error = nf90_put_att(ncid, id_vars2(k), "coordinates", coord_att_3d)
                      call netcdf_err(error, 'DEFINING COORD')
                      error = nf90_put_att(ncid, id_vars2(k), "units", target_diag_units(i))
                      call netcdf_err(error, 'DEFINING UNITS')
@@ -680,7 +696,7 @@ contains
                      call netcdf_err(error, 'DEFINING VAR')
                      error = nf90_put_att(ncid, id_vars3_nz(m), "MemoryOrder", "XYZ ")
                      call netcdf_err(error, 'DEFINING MEMORYORDER')
-                     error = nf90_put_att(ncid, id_vars3_nz(m), "coordinates", "XLONG XLAT XTIME")
+                     error = nf90_put_att(ncid, id_vars3_nz(m), "coordinates", coord_att_3d)
                      call netcdf_err(error, 'DEFINING COORD')
                      error = nf90_put_att(ncid, id_vars3_nz(m), "units", target_diag_units(i))
                      call netcdf_err(error, 'DEFINING UNITS')
@@ -721,7 +737,7 @@ contains
                         call netcdf_err(error, 'DEFINING VAR')
                         error = nf90_put_att(ncid, id_vars2(k), "MemoryOrder", "XY ")
                         call netcdf_err(error, 'DEFINING MEMORYORDER')
-                        error = nf90_put_att(ncid, id_vars2(k), "coordinates", "XLONG XLAT XTIME")
+                        error = nf90_put_att(ncid, id_vars2(k), "coordinates", coord_att_3d)
                         call netcdf_err(error, 'DEFINING COORD')
                         error = nf90_put_att(ncid, id_vars2(k), "units", target_hist_units_2d_cons(i))
                         call netcdf_err(error, 'DEFINING UNITS')
@@ -759,7 +775,7 @@ contains
                      call netcdf_err(error, 'DEFINING VAR')
                      error = nf90_put_att(ncid, id_vars2(k), "MemoryOrder", "XY ")
                      call netcdf_err(error, 'DEFINING MEMORYORDER')
-                     error = nf90_put_att(ncid, id_vars2(k), "coordinates", "XLONG XLAT XTIME")
+                     error = nf90_put_att(ncid, id_vars2(k), "coordinates", coord_att_3d)
                      call netcdf_err(error, 'DEFINING COORD')
                      error = nf90_put_att(ncid, id_vars2(k), "units", target_hist_units_2d_patch(i))
                      call netcdf_err(error, 'DEFINING UNITS')
@@ -795,7 +811,7 @@ contains
                     call netcdf_err(error, 'DEFINING VAR')
                     error = nf90_put_att(ncid, id_vars2(k), "MemoryOrder", "XY ")
                     call netcdf_err(error, 'DEFINING MEMORYORDER')
-                    error = nf90_put_att(ncid, id_vars2(k), "coordinates", "XLONG XLAT XTIME")
+                    error = nf90_put_att(ncid, id_vars2(k), "coordinates", coord_att_3d)
                     call netcdf_err(error, 'DEFINING COORD')
                     error = nf90_put_att(ncid, id_vars2(k), "units", target_hist_units_2d_nstd(i))
                     call netcdf_err(error, 'DEFINING UNITS')
@@ -829,7 +845,7 @@ contains
                     call netcdf_err(error, 'DEFINING VAR')
                     error = nf90_put_att(ncid, id_vars_soil(i), "MemoryOrder", "XYZ ")
                     call netcdf_err(error, 'DEFINING MEMORYORDER')
-                    error = nf90_put_att(ncid, id_vars_soil(i), "coordinates", "XLONG XLAT XTIME")
+                    error = nf90_put_att(ncid, id_vars_soil(i), "coordinates", coord_att_3d)
                     call netcdf_err(error, 'DEFINING COORD')
                     error = nf90_put_att(ncid, id_vars_soil(i), "units", target_hist_units_soil(i))
                     call netcdf_err(error, 'DEFINING UNITS')
@@ -864,7 +880,7 @@ contains
                     call netcdf_err(error, 'DEFINING VAR')
                     error = nf90_put_att(ncid, id_vars3_nz(i + n3d), "MemoryOrder", "XYZ ")
                     call netcdf_err(error, 'DEFINING MEMORYORDER')
-                    error = nf90_put_att(ncid, id_vars3_nz(i + n3d), "coordinates", "XLONG XLAT XTIME")
+                    error = nf90_put_att(ncid, id_vars3_nz(i + n3d), "coordinates", coord_att_3d)
                     call netcdf_err(error, 'DEFINING COORD')
                     error = nf90_put_att(ncid, id_vars3_nz(i + n3d), "units", target_hist_units_3d_nz(i))
                     call netcdf_err(error, 'DEFINING UNITS')
@@ -885,7 +901,7 @@ contains
                         call netcdf_err(error, 'DEFINING VAR')
                         error = nf90_put_att(ncid, id_mu, "MemoryOrder", "XYZ ")
                         call netcdf_err(error, 'DEFINING MEMORYORDER')
-                        error = nf90_put_att(ncid, id_mu, "coordinates", "XLONG XLAT XTIME")
+                        error = nf90_put_att(ncid, id_mu, "coordinates", coord_att_3d)
                         call netcdf_err(error, 'DEFINING COORD')
                         error = nf90_put_att(ncid, id_mu, "units", target_hist_units_3d_nz(i))
                         call netcdf_err(error, 'DEFINING UNITS')
@@ -983,7 +999,7 @@ contains
                     call netcdf_err(error, 'DEFINING VAR')
                     error = nf90_put_att(ncid, id_vars3_nzp1(i), "MemoryOrder", "XYZ ")
                     call netcdf_err(error, 'DEFINING MEMORYORDER')
-                    error = nf90_put_att(ncid, id_vars3_nzp1(i), "coordinates", "XLONG XLAT XTIME")
+                    error = nf90_put_att(ncid, id_vars3_nzp1(i), "coordinates", coord_att_3d)
                     call netcdf_err(error, 'DEFINING COORD')
                     if (wrf_mod_vars .and. trim(varname) == 'PHB') then
                         error = nf90_put_att(ncid, id_vars3_nzp1(i), "units", "gpm")
@@ -1010,7 +1026,7 @@ contains
                         call netcdf_err(error, 'DEFINING VAR')
                         error = nf90_put_att(ncid, id_ph, "MemoryOrder", "XYZ ")
                         call netcdf_err(error, 'DEFINING MEMORYORDER')
-                        error = nf90_put_att(ncid, id_ph, "coordinates", "XLONG XLAT XTIME")
+                        error = nf90_put_att(ncid, id_ph, "coordinates", coord_att_3d)
                         call netcdf_err(error, 'DEFINING COORD')
                         error = nf90_put_att(ncid, id_ph, "units", "gpm")
                         call netcdf_err(error, 'DEFINING UNITS')
@@ -1045,7 +1061,7 @@ contains
                     call netcdf_err(error, 'DEFINING VAR')
                     error = nf90_put_att(ncid, id_vars3_vert(i), "MemoryOrder", "XYZ")
                     call netcdf_err(error, 'DEFINING MEMORYORDER')
-                    error = nf90_put_att(ncid, id_vars3_vert(i), "coordinates", "XLONG XLAT XTIME")
+                    error = nf90_put_att(ncid, id_vars3_vert(i), "coordinates", coord_att_3d)
                     call netcdf_err(error, 'DEFINING COORD')
                     error = nf90_put_att(ncid, id_vars3_vert(i), "units", target_hist_units_3d_vert(i))
                     call netcdf_err(error, 'DEFINING UNITS')
@@ -1072,7 +1088,7 @@ contains
             call netcdf_err(error, 'DEFINING VAR')
             error = nf90_put_att(ncid, id_dummy3d_p, "MemoryOrder", "XYZ ")
             call netcdf_err(error, 'DEFINING MEMORYORDER')
-            error = nf90_put_att(ncid, id_dummy3d_p, "coordinates", "XLONG XLAT XTIME")
+            error = nf90_put_att(ncid, id_dummy3d_p, "coordinates", coord_att_3d)
             call netcdf_err(error, 'DEFINING COORD')
             error = nf90_put_att(ncid, id_dummy3d_p, "units", "Pa")
             call netcdf_err(error, 'DEFINING UNITS')
@@ -1093,7 +1109,7 @@ contains
             call netcdf_err(error, 'DEFINING VAR')
             error = nf90_put_att(ncid, id_dummy3d_pb, "MemoryOrder", "XYZ ")
             call netcdf_err(error, 'DEFINING MEMORYORDER')
-            error = nf90_put_att(ncid, id_dummy3d_pb, "coordinates", "XLONG XLAT XTIME")
+            error = nf90_put_att(ncid, id_dummy3d_pb, "coordinates", coord_att_3d)
             call netcdf_err(error, 'DEFINING COORD')
             error = nf90_put_att(ncid, id_dummy3d_pb, "units", "Pa")
             call netcdf_err(error, 'DEFINING UNITS')
