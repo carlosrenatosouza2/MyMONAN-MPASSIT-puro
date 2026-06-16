@@ -120,7 +120,8 @@ contains
                                             dum3d(:, :, :), dum3dt(:, :, :, :), &
                                             dum3dp1(:, :, :), dum3dp1t(:, :, :, :), &
                                             dumsoil(:, :, :), dumsoilt(:, :, :, :), &
-                                            dumsmall(:, :), dum3dtmp(:, :, :), dum1d(:)
+                                            dumsmall(:, :), dum3dtmp(:, :, :), dum1d(:), &
+                                            dum1d_lon(:), dum1d_lat(:)
 
         type(esmf_field), allocatable    :: fields(:), field_write_2d(:), field_extra3(:)
         type(timedelta)                 :: xtime_dt
@@ -447,39 +448,42 @@ contains
             error =  nf90_var_par_access(ncid, id_mfm, NF90_COLLECTIVE)
             call netcdf_err(error ,'SETTING COLLECTIVE ACCESS')
 
-            error = nf90_def_var(ncid, 'MAPFAC_U', NF90_FLOAT, (/dim_lon_stag, dim_lat, dim_time/), id_mfu)
-            call netcdf_err(error, 'DEFINING MAPFAC_U FIELD')
-            error = nf90_put_att(ncid, id_mfu, "description", "LATITUDE, SOUTH IS NEGATIVE")
-            call netcdf_err(error, 'DEFINING MAPFAC_U NAME')
-            error = nf90_put_att(ncid, id_mfu, "units", "degree_north")
-            call netcdf_err(error, 'DEFINING MAPFAC_U UNITS')
-            error = nf90_put_att(ncid, id_mfu, "MemoryOrder", "XY ")
-            call netcdf_err(error, 'DEFINING MEMORYORDER')
-            error = nf90_put_att(ncid, id_mfu, "coordinates", "XLONG_U XLAT_U")
-            call netcdf_err(error, 'DEFINING COORD')
-            error = nf90_put_att(ncid, id_mfu, "stagger", "X")
-            call netcdf_err(error, 'DEFINING STAGGER')
-            error = nf90_put_att(ncid, id_mfu, "FieldType", 104)
-            call netcdf_err(error, 'DEFINING FieldType')
-            error =  nf90_var_par_access(ncid, id_mfu, NF90_COLLECTIVE)
-            call netcdf_err(error ,'SETTING COLLECTIVE ACCESS')
+            !CR:
+            if (.not. output_grads) then
+               error = nf90_def_var(ncid, 'MAPFAC_U', NF90_FLOAT, (/dim_lon_stag, dim_lat, dim_time/), id_mfu)
+               call netcdf_err(error, 'DEFINING MAPFAC_U FIELD')
+               error = nf90_put_att(ncid, id_mfu, "description", "LATITUDE, SOUTH IS NEGATIVE")
+               call netcdf_err(error, 'DEFINING MAPFAC_U NAME')
+               error = nf90_put_att(ncid, id_mfu, "units", "degree_north")
+               call netcdf_err(error, 'DEFINING MAPFAC_U UNITS')
+               error = nf90_put_att(ncid, id_mfu, "MemoryOrder", "XY ")
+               call netcdf_err(error, 'DEFINING MEMORYORDER')
+               error = nf90_put_att(ncid, id_mfu, "coordinates", "XLONG_U XLAT_U")
+               call netcdf_err(error, 'DEFINING COORD')
+               error = nf90_put_att(ncid, id_mfu, "stagger", "X")
+               call netcdf_err(error, 'DEFINING STAGGER')
+               error = nf90_put_att(ncid, id_mfu, "FieldType", 104)
+               call netcdf_err(error, 'DEFINING FieldType')
+               error =  nf90_var_par_access(ncid, id_mfu, NF90_COLLECTIVE)
+               call netcdf_err(error ,'SETTING COLLECTIVE ACCESS')
 
-            error = nf90_def_var(ncid, 'MAPFAC_V', NF90_FLOAT, (/dim_lon, dim_lat_stag, dim_time/), id_mfv)
-            call netcdf_err(error, 'DEFINING MAPFAC_V FIELD')
-            error = nf90_put_att(ncid, id_mfv, "description", "LATITUDE, SOUTH IS NEGATIVE")
-            call netcdf_err(error, 'DEFINING MAPFAC_V NAME')
-            error = nf90_put_att(ncid, id_mfv, "units", "degree_north")
-            call netcdf_err(error, 'DEFINING MAPFAC_V UNITS')
-            error = nf90_put_att(ncid, id_mfv, "MemoryOrder", "XY ")
-            call netcdf_err(error, 'DEFINING MEMORYORDER')
-            error = nf90_put_att(ncid, id_mfv, "coordinates", "XLONG_V XLAT_V")
-            call netcdf_err(error, 'DEFINING COORD')
-            error = nf90_put_att(ncid, id_mfv, "stagger", "Y")
-            call netcdf_err(error, 'DEFINING STAGGER')
-            error = nf90_put_att(ncid, id_mfv, "FieldType", 104)
-            call netcdf_err(error, 'DEFINING FieldType')
-            error =  nf90_var_par_access(ncid, id_mfv, NF90_COLLECTIVE)
-            call netcdf_err(error ,'SETTING COLLECTIVE ACCESS')
+               error = nf90_def_var(ncid, 'MAPFAC_V', NF90_FLOAT, (/dim_lon, dim_lat_stag, dim_time/), id_mfv)
+               call netcdf_err(error, 'DEFINING MAPFAC_V FIELD')
+               error = nf90_put_att(ncid, id_mfv, "description", "LATITUDE, SOUTH IS NEGATIVE")
+               call netcdf_err(error, 'DEFINING MAPFAC_V NAME')
+               error = nf90_put_att(ncid, id_mfv, "units", "degree_north")
+               call netcdf_err(error, 'DEFINING MAPFAC_V UNITS')
+               error = nf90_put_att(ncid, id_mfv, "MemoryOrder", "XY ")
+               call netcdf_err(error, 'DEFINING MEMORYORDER')
+               error = nf90_put_att(ncid, id_mfv, "coordinates", "XLONG_V XLAT_V")
+               call netcdf_err(error, 'DEFINING COORD')
+               error = nf90_put_att(ncid, id_mfv, "stagger", "Y")
+               call netcdf_err(error, 'DEFINING STAGGER')
+               error = nf90_put_att(ncid, id_mfv, "FieldType", 104)
+               call netcdf_err(error, 'DEFINING FieldType')
+               error =  nf90_var_par_access(ncid, id_mfv, NF90_COLLECTIVE)
+               call netcdf_err(error ,'SETTING COLLECTIVE ACCESS')
+            endif
 
             if (PROJ_CODE==PROJ_LC) then
                error = nf90_def_var(ncid, 'SINALPHA', NF90_FLOAT, (/dim_lon, dim_lat, dim_time/), id_sina)
@@ -1094,34 +1098,82 @@ contains
          error = nf90_enddef(ncid, header_buffer_val, 4, 0, 4)
          call netcdf_err(error, 'DEFINING HEADER')
 
-!--- write fields
+!--- CR: write coordinate fields grads:
 
-!  longitude
 
-        if (localpet == 0) print *, "- CALL FieldGet FOR TARGET GRID LONGITUDE"
-        call ESMF_FieldGet(longitude_target_grid, farrayPtr=dum2dptr, computationalLBound=clb,&
-                             computationalUBound = cub, rc=error)
-        if (ESMF_logFoundError(rcToCheck=error, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) &
-            call error_handler("IN FieldGet", error)
-        count1 = cub(1)-clb(1)+1
-        count2 = cub(2)-clb(2)+1
-        allocate(dum2d(count1,count2))
-        dum2d(:,:) = dum2dptr(clb(1):cub(1),clb(2):cub(2))
-        error = nf90_put_var(ncid, id_lon, dum2d, start = (/clb(1),clb(2),1/),  &
-                                   count=(/count1, count2, 1/))
-        call netcdf_err(error, 'WRITING LONGITUDE RECORD')
+         if (output_grads) then
+         
+         
+            !  CR: longitude (1D):
+            !
+            !  CR: Extrair a primeira linha(j=clb(2)) do array 2D local para obter os valores de longitude 
+            !      desse pedaco de i, e a primeira coluna (i=clb(1)) para obter os valores de latitude desse 
+            !      pedaco de j. 
+            !      Cada processo escreve apenas sua fatia, com start/count 1D.
+         
+            if (localpet == 0) print *, "- CALL FieldGet FOR TARGET GRID LONGITUDE"
+            call ESMF_FieldGet(longitude_target_grid, farrayPtr=dum2dptr, computationalLBound=clb,&
+                                 computationalUBound = cub, rc=error)
+            if (ESMF_logFoundError(rcToCheck=error, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) &
+                call error_handler("IN FieldGet", error)
+            count1 = cub(1)-clb(1)+1
+            count2 = cub(2)-clb(2)+1
+            allocate(dum1d_lon(count1))
+            dum1d_lon(:) = dum2dptr(clb(1):cub(1), clb(2))
+            error = nf90_put_var(ncid, id_lon, dum1d_lon, start = (/clb(1)/), &
+                                       count=(/count1/))
+            call netcdf_err(error, 'WRITING LONGITUDE RECORD')
+            deallocate(dum1d_lon)
+         
+         
+            !  CR: latitude (1D):
+            
+            if (localpet == 0) print *, "- CALL FieldGet FOR TARGET GRID LATITUDE"
+            call ESMF_FieldGet(latitude_target_grid, farrayPtr=dum2dptr, rc=error)
+            if (ESMF_logFoundError(rcToCheck=error, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) &
+                call error_handler("IN FieldGet", error)
+            allocate(dum1d_lat(count2))
+            dum1d_lat(:) = dum2dptr(clb(1), clb(2):cub(2))
+            error = nf90_put_var(ncid, id_lat, dum1d_lat, start = (/clb(2)/), &
+                                       count=(/count2/))
+            call netcdf_err(error, 'WRITING LATITUDE RECORD')
+            deallocate(dum1d_lat)
+            
+         else
+         
+         
+!  Original longitude
+
+           if (localpet == 0) print *, "- CALL FieldGet FOR TARGET GRID LONGITUDE"
+           call ESMF_FieldGet(longitude_target_grid, farrayPtr=dum2dptr, computationalLBound=clb,&
+                                computationalUBound = cub, rc=error)
+           if (ESMF_logFoundError(rcToCheck=error, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) &
+               call error_handler("IN FieldGet", error)
+           count1 = cub(1)-clb(1)+1
+           count2 = cub(2)-clb(2)+1
+           allocate(dum2d(count1,count2))
+           dum2d(:,:) = dum2dptr(clb(1):cub(1),clb(2):cub(2))
+           error = nf90_put_var(ncid, id_lon, dum2d, start = (/clb(1),clb(2),1/),  &
+                                      count=(/count1, count2, 1/))
+           call netcdf_err(error, 'WRITING LONGITUDE RECORD')
 
 !  latitude
 
-        if (localpet == 0) print *, "- CALL FieldGet FOR TARGET GRID LATITUDE"
-        call ESMF_FieldGet(latitude_target_grid, farrayPtr=dum2dptr, rc=error)
-        if (ESMF_logFoundError(rcToCheck=error, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) &
-            call error_handler("IN FieldGet", error)
+           if (localpet == 0) print *, "- CALL FieldGet FOR TARGET GRID LATITUDE"
+           call ESMF_FieldGet(latitude_target_grid, farrayPtr=dum2dptr, rc=error)
+           if (ESMF_logFoundError(rcToCheck=error, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) &
+               call error_handler("IN FieldGet", error)
 
-        dum2d(:, :) = dum2dptr(clb(1):cub(1),clb(2):cub(2))
-        error = nf90_put_var(ncid, id_lat, dum2d, start = (/clb(1),clb(2),1/),  &
-                                   count=(/count1, count2, 1/))
-        call netcdf_err(error, 'WRITING LATITUDE RECORD')
+           dum2d(:, :) = dum2dptr(clb(1):cub(1),clb(2):cub(2))
+           error = nf90_put_var(ncid, id_lat, dum2d, start = (/clb(1),clb(2),1/),  &
+                                      count=(/count1, count2, 1/))
+           call netcdf_err(error, 'WRITING LATITUDE RECORD')
+           
+      endif
+      
+      !CR: 
+      if (.not. output_grads) then
+      
 
 
 !  longitude on u grid
@@ -1179,6 +1231,9 @@ contains
                                    count=(/count1v, count2v, 1/))
         call netcdf_err(error, 'WRITING XLAT_U RECORD')
 
+
+      endif
+
 ! mapfac on mass grid
 
         if (localpet == 0) print *, "- CALL FieldGet FOR TARGET GRID mapfac_m"
@@ -1191,30 +1246,34 @@ contains
                                    count=(/count1, count2, 1/))
         call netcdf_err(error, 'WRITING MAPFAC_M RECORD')
 
-! mapfac on u grid
+         !CR:
+         if (.not. output_grads) then
+            ! mapfac on u grid
 
-        if (localpet == 0) print *, "- CALL FieldGet FOR TARGET GRID mapfac_u"
-        call ESMF_FieldGet(mapfac_u_target_grid, farrayPtr=dum2dptr, rc=error)
-        if (ESMF_logFoundError(rcToCheck=error, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) &
-            call error_handler("IN FieldGet", error)
-            
-        dum2du = dum2dptr(clbu(1):cubu(1),clbu(2):cubu(2))
-        error = nf90_put_var(ncid, id_mfu, dum2du, start = (/clbu(1),clbu(2),1/),  &
-                                   count=(/count1u, count2u, 1/))
-        call netcdf_err(error, 'WRITING MAPFAC_U RECORD')
+            if (localpet == 0) print *, "- CALL FieldGet FOR TARGET GRID mapfac_u"
+            call ESMF_FieldGet(mapfac_u_target_grid, farrayPtr=dum2dptr, rc=error)
+            if (ESMF_logFoundError(rcToCheck=error, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) &
+               call error_handler("IN FieldGet", error)
+ 
+            dum2du = dum2dptr(clbu(1):cubu(1),clbu(2):cubu(2))
+            error = nf90_put_var(ncid, id_mfu, dum2du, start = (/clbu(1),clbu(2),1/),  &
+                                      count=(/count1u, count2u, 1/))
+            call netcdf_err(error, 'WRITING MAPFAC_U RECORD')
 
-!mapfac on v grid
+            !mapfac on v grid
 
-        if (localpet == 0) print *, "- CALL FieldGet FOR TARGET GRID mapfac_v"
-        call ESMF_FieldGet(mapfac_v_target_grid, farrayPtr=dum2dptr, rc=error)
-        if (ESMF_logFoundError(rcToCheck=error, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) &
-            call error_handler("IN FieldGet", error)
-            
+            if (localpet == 0) print *, "- CALL FieldGet FOR TARGET GRID mapfac_v"
+            call ESMF_FieldGet(mapfac_v_target_grid, farrayPtr=dum2dptr, rc=error)
+            if (ESMF_logFoundError(rcToCheck=error, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) &
+               call error_handler("IN FieldGet", error)
+ 
 
-        dum2dv = dum2dptr(clbv(1):cubv(1),clbv(2):cubv(2))
-        error = nf90_put_var(ncid, id_mfv, dum2du, start = (/clb(1),clb(2),1/),  &
-                                   count=(/count1v, count2v, 1/))
-        call netcdf_err(error, 'WRITING MAPFAC_V RECORD')
+            dum2dv = dum2dptr(clbv(1):cubv(1),clbv(2):cubv(2))
+            error = nf90_put_var(ncid, id_mfv, dum2du, start = (/clb(1),clb(2),1/),  &
+                                      count=(/count1v, count2v, 1/))
+            call netcdf_err(error, 'WRITING MAPFAC_V RECORD')
+        
+        endif
 
         if (PROJ_CODE==PROJ_LC .or. PROJ_CODE==PROJ_CASSINI) then
 !sinalpha
