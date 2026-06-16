@@ -102,7 +102,7 @@ contains
         integer                          :: header_buffer_val = 16384
         integer                          :: dim_time, dim_lon, dim_lat, dim_z, dim_zp1, dim_soil
         integer                          :: dim_lonp, dim_latp, dim_str, dim_lon_stag, dim_lat_stag
-        integer                          :: id_lat, id_lon, id_z, id_zs, id_times, id_xtime, id_itime
+        integer                          :: id_lat, id_lon, id_z, id_zs, id_times, id_xtime, id_itime, id_time_grads
         integer                          :: id_latu, id_latv, id_lonu, id_lonv, id_ph, id_mu, id_hgt, id_ptop
         integer                          :: id_mfm, id_mfu, id_mfv, id_sina, id_cosa
         integer                          :: id_u, id_v
@@ -615,6 +615,21 @@ contains
             error =  nf90_var_par_access(ncid, id_xtime, NF90_COLLECTIVE)
             call netcdf_err(error ,'SETTING COLLECTIVE ACCESS')
 
+            !CR:
+            if (output_grads) then
+                error = nf90_def_var(ncid, 'time', NF90_DOUBLE, (/dim_time/), id_time_grads)
+                call netcdf_err(error, 'DEFINING TIME COORDINATE')
+                error = nf90_put_att(ncid, id_time_grads, 'long_name', 'time')
+                call netcdf_err(error, 'DEFINING TIME LONG_NAME')
+                error = nf90_put_att(ncid, id_time_grads, 'units', 'minutes since '//start_time)
+                call netcdf_err(error, 'DEFINING TIME UNITS')
+                error = nf90_put_att(ncid, id_time_grads, 'axis', 'T')
+                call netcdf_err(error, 'DEFINING TIME AXIS')
+                error = nf90_put_att(ncid, id_time_grads, 'calendar', 'standard')
+                call netcdf_err(error, 'DEFINING TIME CALENDAR')
+                error = nf90_var_par_access(ncid, id_time_grads, NF90_COLLECTIVE)
+                call netcdf_err(error, 'SETTING TIME COLLECTIVE ACCESS')
+            end if
         !end if
 
 
@@ -1388,6 +1403,12 @@ contains
 
         error = nf90_put_var(ncid, id_xtime, (/xtime_dt%total_seconds()/60.0/), count=(/1/))
         call netcdf_err(error, 'WRITING XTIME RECORD')
+        
+        !CR:
+        if (output_grads) then
+            error = nf90_put_var(ncid, id_time_grads, (/xtime_dt%total_seconds()/60.0/), count=(/1/))
+            call netcdf_err(error, 'WRITING TIME RECORD')
+        end if
 
         !  itimestep
 
