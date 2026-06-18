@@ -7,6 +7,7 @@
  interp_diag          = .true.
  interp_hist          = .false.
  wrf_mod_vars         = .false.
+ output_grads         = .true.
  esmf_log             = .true.
  target_grid_type     = 'lat-lon'
  is_regional          = .false.

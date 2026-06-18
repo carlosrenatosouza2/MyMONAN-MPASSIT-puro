@@ -3,8 +3,8 @@
 #PBS -q pesqextra
 #PBS -l select=1:ncpus=16:mpiprocs=16:ompthreads=1
 #PBS -l walltime=1:00:00
-#PBS -o /p/projetos/monan_adm/carlos.souza/MPASSIT/MPASSIT/run/mpassit.out
-#PBS -e /p/projetos/monan_adm/carlos.souza/MPASSIT/MPASSIT/run/mpassit.err
+#PBS -o /p/projetos/monan_adm/carlos.souza/MPASSIT/myMPASSIT/MyMONAN-MPASSIT-puro/run/mpassit.out
+#PBS -e /p/projetos/monan_adm/carlos.souza/MPASSIT/myMPASSIT/MyMONAN-MPASSIT-puro/run/mpassit.err
 #PBS -l place=scatter:excl
 #PBS -V
 
@@ -27,6 +27,8 @@ export LD_LIBRARY_PATH=${NETCDF_DIR}/lib:${LD_LIBRARY_PATH}
 export ESMF_DIR=/p/projetos/monan_adm/carlos.souza/ESMF/esmf-8.9.1
 export LD_LIBRARY_PATH=${ESMF_DIR}/lib/libO/Linux.gfortran.64.mpich2.default:${LD_LIBRARY_PATH}
 
+
+cp -f ${PBS_O_WORKDIR}/../bin/mpassit ${PBS_O_WORKDIR}
 cd ${PBS_O_WORKDIR}
 ln -sf namelist.input fort.41
-mpiexec -n 16 ./mpassit namelist.input
+time mpiexec -n 16 ./mpassit namelist.input

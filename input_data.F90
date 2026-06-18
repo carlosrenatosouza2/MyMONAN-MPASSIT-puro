@@ -280,8 +280,9 @@
     allocate(diag_fields(n_diag_fields))
     if (localpet==0) print*,"- INITIALIZE INPUT DIAG FIELDS."
     do i = 1, n_diag_fields
-        if (input_diag_names(i) == "refl10cm") then
-          if (localpet==0) print*, "- INIT FIELD ", input_diag_names(i)
+         !CR:
+         if (input_diag_names(i) == "refl10cm" .or. input_diag_names(i) == "temperature_isobaric") then          
+            if (localpet==0) print*, "- INIT FIELD ", input_diag_names(i)
           diag_fields(i) = ESMF_FieldCreate(input_grid, &
                             typekind=ESMF_TYPEKIND_R8, &
                             meshloc=ESMF_MESHLOC_ELEMENT, &
