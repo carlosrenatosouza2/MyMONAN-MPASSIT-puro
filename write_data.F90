@@ -1439,7 +1439,8 @@ contains
         if (allocated(dumsmall)) deallocate (dumsmall)
 
         !  2d fields
-
+         !CR: 
+         n2d=k
         do i = 1, n2d
 
             call ESMF_FieldGet(field_write_2d(i), name=varname, rc=error)

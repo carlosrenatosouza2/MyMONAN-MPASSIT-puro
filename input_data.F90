@@ -119,16 +119,17 @@
  subroutine read_input_diag_data(localpet)
 
  character(len=500)              :: the_file
- character(len=50)               :: vname
+ character(len=50)               :: vname, dim_name
 
  integer, intent(in)             :: localpet
  integer                         :: error, ncid, rc
  integer                         :: id_dim
- integer                         :: id_var, i, j, nodes, ndims
-
+ integer                         :: id_var, i, j, nodes, ndims, d, nv_size, dim_size_tmp
+ integer                         :: dimids(NF90_MAX_VAR_DIMS)
+ 
  type(esmf_field),allocatable    :: fields(:)
 
- real(esmf_kind_r8), allocatable :: dummy(:), dummy2(:,:,:)
+ real(esmf_kind_r8), allocatable :: dummy(:), dummy3d(:,:,:)
 
  real(esmf_kind_r8), pointer     :: varptr(:), varptr2(:,:)
 
@@ -159,7 +160,6 @@
      call error_handler("IN MeshGet", rc)
 
  allocate(dummy(nCells_input))
- allocate(dummy2(nz_input, nCells_input,1))
 
  do i = 1,n_diag_fields
     
@@ -178,13 +178,15 @@
     if (localpet==0) print*,"- READ ", trim(vname)
     error=nf90_inq_varid(ncid, trim(vname), id_var)
     call netcdf_err(error, 'reading field id - '//trim(vname) )
-    error=nf90_inquire_variable(ncid, id_var, ndims=ndims)
+    
+    error=nf90_inquire_variable(ncid, id_var, ndims=ndims, dimids=dimids)
     call netcdf_err(error, 'reading variable dims' )
+    
     if (ndims == 2) then
       call ESMF_FieldGet(fields(i), farrayPtr=varptr, rc=rc)
       if(ESMF_logFoundError(rcToCheck=rc,msg=ESMF_LOGERR_PASSTHRU,line=__LINE__,file=__FILE__)) &
          call error_handler("IN FieldGet", rc)
-      error=nf90_get_var(ncid, id_var, dummy)
+      error=nf90_get_var(ncid, id_var, dummy, start=(/1,1/), count=(/nCells_input,1/))
       call netcdf_err(error, 'reading field' )
       if (localpet==0) print*,"- SET ON MESH ", trim(vname)
       do j = 1, nCellsPerPET
@@ -192,18 +194,29 @@
       enddo
       !if (localpet==0) print*, localpet, minval(varptr), maxval(varptr)
       nullify(varptr)
-    elseif (ndims == 3) then
+   elseif (ndims == 3) then
+      nv_size = 0
+      do d = 1, ndims
+        error = nf90_inquire_dimension(ncid, dimids(d), name=dim_name, len=dim_size_tmp)
+        call netcdf_err(error, 'reading dim info for '//trim(vname))
+        if (trim(dim_name) /= 'nCells' .and. trim(dim_name) /= 'Time') then
+          nv_size = dim_size_tmp
+        endif
+      enddo
+      if (nv_size == 0) call error_handler("COULD NOT DETECT VERTICAL DIM FOR "//trim(vname), -1)
+      if (localpet==0) print*,"- 3D FIELD ", trim(vname), " nlevs=", nv_size
+      allocate(dummy3d(nv_size, nCells_input, 1))
       call ESMF_FieldGet(fields(i), farrayPtr=varptr2, rc=rc)
       if(ESMF_logFoundError(rcToCheck=rc,msg=ESMF_LOGERR_PASSTHRU,line=__LINE__,file=__FILE__))&
         call error_handler("IN FieldGet", rc)
-      error=nf90_get_var(ncid, id_var, dummy2)
+      error=nf90_get_var(ncid, id_var, dummy3d, start=(/1,1,1/), count=(/nv_size,nCells_input,1/))
       call netcdf_err(error, 'reading field' )
       if (localpet==0) print*,"- SET ON MESH ", trim(vname)
       do j = 1, nCellsPerPET
-        varptr2(j,:) = dummy2(:,elemIDs(j),1)
+        varptr2(j,:) = dummy3d(:,elemIDs(j),1)
       enddo
-      !if (localpet==0) print*, localpet, minval(varptr2), maxval(varptr2)
       nullify(varptr2)
+      deallocate(dummy3d)
     endif
     error=nf90_get_att(ncid,id_var,'units',target_diag_units(i))
     call netcdf_err(error, 'reading field units' )
@@ -268,46 +281,81 @@
     implicit none
 
     integer, intent(in)           :: localpet
-    integer                       :: i, rc
+    
+    integer                       :: i, rc, n_fields_2d, n_fields_3d, d, nv_size, dim_size_tmp, error
+    integer                       :: ncid_init, id_var_init, ndims_init
+    integer                       :: dimids_init(NF90_MAX_VAR_DIMS)
+    character(len=50)             :: dim_name
+    
     type(esmf_field),allocatable  :: diag_fields(:)
-    character(50), allocatable    :: input_diag_names(:)
+    character(50), allocatable    :: input_diag_names(:), names_2d(:), names_3d(:), &
+                                     target_2d(:), target_3d(:)
     character(50)                 :: fname
 
-    fname = 'diaglist'
+    fname = 'varlist_2d'
+    call read_varlist(localpet,fname,n_fields_2d,names_2d,target_2d)
 
-    call read_varlist(localpet,fname,n_diag_fields,input_diag_names, target_diag_names)
+    fname = 'varlist_3d'
+    call read_varlist(localpet,fname,n_fields_3d,names_3d,target_3d)
+
+    n_diag_fields = n_fields_2d + n_fields_3d
+
+    allocate(input_diag_names(n_diag_fields))
+    if (.not. allocated(target_diag_names)) allocate(target_diag_names(n_diag_fields))
+
+    input_diag_names(1:n_fields_2d)               = names_2d
+    target_diag_names(1:n_fields_2d)              = target_2d
+    input_diag_names(n_fields_2d+1:n_diag_fields) = names_3d
+    target_diag_names(n_fields_2d+1:n_diag_fields)= target_3d
 
     allocate(diag_fields(n_diag_fields))
     if (localpet==0) print*,"- INITIALIZE INPUT DIAG FIELDS."
+    error = nf90_open(trim(diag_file_input_grid), nf90_nowrite, ncid_init)
+    call netcdf_err(error, 'opening diag file in init_input_diag_fields')
     do i = 1, n_diag_fields
          !CR:
-         if (input_diag_names(i) == "refl10cm" .or. input_diag_names(i) == "temperature_isobaric") then          
-            if (localpet==0) print*, "- INIT FIELD ", input_diag_names(i)
-          diag_fields(i) = ESMF_FieldCreate(input_grid, &
-                            typekind=ESMF_TYPEKIND_R8, &
-                            meshloc=ESMF_MESHLOC_ELEMENT, &
-                            ungriddedLBound=(/1/), &
-                            ungriddedUBound=(/nz_input/), &
-                            name=input_diag_names(i), rc=rc)
-          if(ESMF_logFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__,file=__FILE__))&
-          call error_handler("IN FieldCreate", rc)
-        else
-          if (localpet==0) print*, "- INIT FIELD ", input_diag_names(i)
-          diag_fields(i) = ESMF_FieldCreate(input_grid, &
-                            typekind=ESMF_TYPEKIND_R8, &
-                            meshloc=ESMF_MESHLOC_ELEMENT, &
-                            name=input_diag_names(i), rc=rc)
-          if(ESMF_logFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__,file=__FILE__)) &
-          call error_handler("IN FieldCreate", rc)
-        endif
-    enddo
-
-    input_diag_bundle = ESMF_FieldBundleCreate(fieldList=diag_fields, &
+         if (i > n_fields_2d) then
+            ! Campo 3D: detectar tamanho da dimensao vertical no arquivo
+            error = nf90_inq_varid(ncid_init, trim(input_diag_names(i)), id_var_init)
+            call netcdf_err(error, 'init: reading field id - '//trim(input_diag_names(i)))
+            error = nf90_inquire_variable(ncid_init, id_var_init, ndims=ndims_init, dimids=dimids_init)
+            call netcdf_err(error, 'init: reading variable dims - '//trim(input_diag_names(i)))
+            nv_size = 0
+            do d = 1, ndims_init
+              error = nf90_inquire_dimension(ncid_init, dimids_init(d), name=dim_name, len=dim_size_tmp)
+              call netcdf_err(error, 'init: reading dim info for '//trim(input_diag_names(i)))
+              if (trim(dim_name) /= 'nCells' .and. trim(dim_name) /= 'Time') then
+                nv_size = dim_size_tmp
+              endif
+            enddo
+            if (nv_size == 0) call error_handler("COULD NOT DETECT VERTICAL DIM FOR "//trim(input_diag_names(i)), -1)
+            if (localpet==0) print*, "- INIT 3D FIELD ", trim(input_diag_names(i)), " nlevs=", nv_size
+            diag_fields(i) = ESMF_FieldCreate(input_grid, &
+                              typekind=ESMF_TYPEKIND_R8, &
+                              meshloc=ESMF_MESHLOC_ELEMENT, &
+                              ungriddedLBound=(/1/), &
+                              ungriddedUBound=(/nv_size/), &
+                              name=input_diag_names(i), rc=rc)
+            if(ESMF_logFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__,file=__FILE__))&
+              call error_handler("IN FieldCreate", rc)
+          else
+            if (localpet==0) print*, "- INIT 2D FIELD ", input_diag_names(i)
+            diag_fields(i) = ESMF_FieldCreate(input_grid, &
+                              typekind=ESMF_TYPEKIND_R8, &
+                              meshloc=ESMF_MESHLOC_ELEMENT, &
+                              name=input_diag_names(i), rc=rc)
+            if(ESMF_logFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__,file=__FILE__)) &
+              call error_handler("IN FieldCreate", rc)
+          endif    
+      enddo
+      error = nf90_close(ncid_init)
+      call netcdf_err(error, 'closing diag file in init_input_diag_fields')
+      input_diag_bundle = ESMF_FieldBundleCreate(fieldList=diag_fields, &
                                     name="input diag data", rc=rc)
     if(ESMF_logFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__,file=__FILE__)) &
         call error_handler("IN FieldBundleCreate", rc)
 
-    deallocate(diag_fields, input_diag_names)
+    deallocate(diag_fields, input_diag_names, names_2d, names_3d, target_2d, target_3d)
  end subroutine init_input_diag_fields
 
 !> Read input grid hist data.
