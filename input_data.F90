@@ -78,7 +78,9 @@
                                     do_v_interp, &
                                     do_u10_interp, &
                                     do_v10_interp, &
-                                    u10_ind, v10_ind
+                                    u10_ind, v10_ind, &
+                                    n_iso_levels, &
+                                    iso_levels_coord
  implicit none
 
  private
@@ -264,6 +266,21 @@
  call netcdf_err(error, 'reading xtime id')
  error = nf90_get_var(ncid, id_var, valid_time)
  call netcdf_err(error, 'getting xtime')
+
+! Ler coordenada de niveis isobaricos se existir no arquivo diag
+ error = nf90_inq_varid(ncid, 't_iso_levels', id_var)
+ if (error == NF90_NOERR) then
+    error = nf90_inquire_variable(ncid, id_var, ndims=ndims)
+    call netcdf_err(error, 'reading t_iso_levels ndims')
+    error = nf90_inquire_dimension(ncid, dimids(1), len=n_iso_levels)
+    call netcdf_err(error, 'reading n_iso_levels')
+    allocate(iso_levels_coord(n_iso_levels))
+    error = nf90_get_var(ncid, id_var, iso_levels_coord)
+    call netcdf_err(error, 'reading t_iso_levels values')
+    if (localpet==0) print*, "- READ t_iso_levels, n=", n_iso_levels, " first=", iso_levels_coord(1)
+ else
+    n_iso_levels = 0
+ endif
 
  error = nf90_close(ncid)
 
