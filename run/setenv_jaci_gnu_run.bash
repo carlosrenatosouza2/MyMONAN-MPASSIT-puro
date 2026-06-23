@@ -11,7 +11,7 @@ module load xpmem/0.2.119-1.3_gef379be13330
 module load cray-pals
 module load METIS/5.1.0
 module load grads
-module load ncview
+
 
 # NetCDF paralelo na frente do LD_LIBRARY_PATH
 export NETCDF=${NETCDF_DIR}
