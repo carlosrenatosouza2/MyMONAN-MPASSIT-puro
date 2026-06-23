@@ -89,7 +89,9 @@ contains
                               target_hist_longname_soil, &
                               diag_out_interval, &
                               do_u_interp, &
-                              do_v_interp
+                              do_v_interp, &
+                              n_iso_levels, &
+                              iso_levels_coord
         implicit none
 
         integer, intent(in)              :: localpet
@@ -99,9 +101,14 @@ contains
         character(len=20)                :: tempstr(1, 19)
         integer, parameter               :: Datestrlen = 19
         character(len=20)                :: coord_att_2d, coord_att_3d, coord_att_z
-        integer                          :: error, ncid, n, rc, i, j, k, m
+        integer                          :: error, ncid, n, rc, i, j, k, m, id_iso_lev
         integer                          :: header_buffer_val = 16384
         integer                          :: dim_time, dim_lon, dim_lat, dim_z, dim_zp1, dim_soil
+        integer                          :: nv, dim_z_field
+        integer, allocatable             :: nlevs_diag3d(:), dim_z_diag3d(:)
+        integer                          :: ugub(1)
+        character(len=20)                :: dim_name_lev
+        real(esmf_kind_r8), allocatable  :: dum3d_diag(:,:,:)
         integer                          :: dim_lonp, dim_latp, dim_str, dim_lon_stag, dim_lat_stag
         integer                          :: id_lat, id_lon, id_z, id_zs, id_times, id_xtime, id_itime, id_time_grads
         integer                          :: id_latu, id_latv, id_lonu, id_lonv, id_ph, id_mu, id_hgt, id_ptop
@@ -134,7 +141,11 @@ contains
         n2d = n_diag_fields + n_hist_fields_2d_patch + n_hist_fields_2d_nstd + n_hist_fields_2d_cons
         allocate (field_write_2d(n2d), id_vars2(n2d))
         allocate (field_extra3(n2d))  !allocate large incase all diag fields are 3d
-        allocate (id_vars3_nz(n_hist_fields_3d_nz + 1))
+
+        allocate (id_vars3_nz(n_diag_fields + n_hist_fields_3d_nz))
+        allocate (nlevs_diag3d(n_diag_fields))
+        allocate (dim_z_diag3d(n_diag_fields))
+
         allocate (id_vars3_nzp1(n_hist_fields_3d_nzp1))
         allocate (id_vars3_vert(n_hist_fields_3d_vert))
         allocate (id_vars_soil(n_hist_fields_soil))
@@ -691,8 +702,38 @@ contains
                 else
                     m = m + 1
                     field_extra3(m) = fields(i)
-                     if (localpet == 0) print *, "- DEFINE 3d diag ON FILE TARGET GRID ", varname
-                     error = nf90_def_var(ncid, varname, NF90_FLOAT, (/dim_lon, dim_lat, dim_z, dim_time/), id_vars3_nz(m))
+                    ! Detectar tamanho vertical real do campo ESMF
+                    call ESMF_FieldGet(fields(i), ungriddedUBound=ugub, rc=rc)
+                    if(ESMF_logFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__,file=__FILE__)) &
+                        call error_handler("IN FieldGet ungriddedUBound", rc)
+                    nv = ugub(1)
+                    nlevs_diag3d(m) = nv
+                    ! Obter ou criar dimensao vertical no NetCDF para este tamanho
+                    if (nv == nz_input) then
+                        dim_z_field = dim_z
+                    else
+                        dim_name_lev = 'iso_levels'
+                        error = nf90_inq_dimid(ncid, trim(dim_name_lev), dim_z_field)
+                        if (error /= NF90_NOERR) then
+                            error = nf90_def_dim(ncid, trim(dim_name_lev), nv, dim_z_field)
+                            call netcdf_err(error, 'DEFINING VERTICAL DIM '//trim(dim_name_lev))
+                            error = nf90_def_var(ncid, trim(dim_name_lev), NF90_FLOAT, (/dim_z_field/), id_iso_lev)
+                            call netcdf_err(error, 'DEFINING ISO_LEVELS COORD VAR')
+                            error = nf90_put_att(ncid, id_iso_lev, 'long_name', 'isobaric levels')
+                            call netcdf_err(error, 'DEFINING ISO_LEVELS LONG_NAME')
+                            error = nf90_put_att(ncid, id_iso_lev, 'units', 'Pa')
+                            call netcdf_err(error, 'DEFINING ISO_LEVELS UNITS')
+                            error = nf90_put_att(ncid, id_iso_lev, 'axis', 'Z')
+                            call netcdf_err(error, 'DEFINING ISO_LEVELS AXIS')
+                            error = nf90_put_att(ncid, id_iso_lev, 'positive', 'down')
+                            call netcdf_err(error, 'DEFINING ISO_LEVELS POSITIVE')
+                            error = nf90_var_par_access(ncid, id_iso_lev, NF90_COLLECTIVE)
+                            call netcdf_err(error, 'SETTING ISO_LEVELS COLLECTIVE ACCESS')
+                        endif
+                    endif
+                    dim_z_diag3d(m) = dim_z_field
+                     if (localpet == 0) print *, "- DEFINE 3d diag ON FILE TARGET GRID ", varname, " nlevs=", nv
+                     error = nf90_def_var(ncid, varname, NF90_FLOAT, (/dim_lon, dim_lat, dim_z_field, dim_time/), id_vars3_nz(m))
                      call netcdf_err(error, 'DEFINING VAR')
                      error = nf90_put_att(ncid, id_vars3_nz(m), "MemoryOrder", "XYZ ")
                      call netcdf_err(error, 'DEFINING MEMORYORDER')
@@ -1439,7 +1480,8 @@ contains
         if (allocated(dumsmall)) deallocate (dumsmall)
 
         !  2d fields
-
+         !CR: 
+         n2d=k
         do i = 1, n2d
 
             call ESMF_FieldGet(field_write_2d(i), name=varname, rc=error)
@@ -1458,23 +1500,31 @@ contains
         if (allocated(field_write_2d)) deallocate (field_write_2d)
         if (allocated(dum2d)) deallocate (dum2d)
 
+        ! Escrever coordenada iso_levels com valores reais de pressao (Pa)
+        if (n3d > 0 .and. n_iso_levels > 0) then
+            error = nf90_put_var(ncid, id_iso_lev, iso_levels_coord)
+            call netcdf_err(error, 'WRITING ISO_LEVELS COORD')
+        endif
+
         !    3d fields from diaglist
 
         if (n3d > 0) then
-            print *, "Loop writing over ", n3d, "3-d nz vars"
+            if (localpet == 0) print *, "Loop writing over ", n3d, "3-d nz vars"
             do i = 1, n3d
                 call ESMF_FieldGet(field_extra3(i), name=varname, rc=error)
                 if (ESMF_logFoundError(rcToCheck=error, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) &
                     call error_handler("IN FieldGet", error)
-                call ESMF_FieldGet(field_extra3(i), farrayPtr = dum3dptr, rc=error)
+                call ESMF_FieldGet(field_extra3(i), farrayPtr=dum3dptr, rc=error)
                 if (ESMF_logFoundError(rcToCheck=error, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) &
-                    call error_handler("IN FieldGet", error)                
-
-                dum3d(:,:,:) = dum3dptr(clb(1):cub(1),clb(2):cub(2),:)
-                if (localpet == 0) print *, trim(varname), minval(dum3d), maxval(dum3d)
-                 error = nf90_put_var(ncid, id_vars3_nz(i), dum3d, start = (/clb(1),clb(2),1,1/), &
-                                count=(/count1,count2, nz_input, 1/))
-                 call netcdf_err(error, 'WRITING RECORD')
+                    call error_handler("IN FieldGet", error)
+                nv = nlevs_diag3d(i)
+                allocate(dum3d_diag(count1, count2, nv))
+                dum3d_diag(:,:,:) = dum3dptr(clb(1):cub(1),clb(2):cub(2),:)
+                if (localpet == 0) print *, "- WRITE TO FILE ", trim(varname), minval(dum3d_diag), maxval(dum3d_diag)
+                error = nf90_put_var(ncid, id_vars3_nz(i), dum3d_diag, &
+                                     start=(/clb(1),clb(2),1,1/), count=(/count1,count2,nv,1/))
+                call netcdf_err(error, 'WRITING RECORD')
+                deallocate(dum3d_diag)
             end do
         end if
         ! 3d soil fields
@@ -1710,7 +1760,8 @@ contains
         if (allocated(target_hist_units_3d_nzp1)) deallocate (target_hist_units_3d_nzp1)
         if (allocated(target_hist_units_3d_vert)) deallocate (target_hist_units_3d_vert)
         if (allocated(target_diag_units)) deallocate (target_diag_units)
-
+        if (allocated(nlevs_diag3d)) deallocate(nlevs_diag3d)
+        if (allocated(dim_z_diag3d)) deallocate(dim_z_diag3d)
         
         error = nf90_close(ncid)
         call netcdf_err(error, 'CLOSING FILE')

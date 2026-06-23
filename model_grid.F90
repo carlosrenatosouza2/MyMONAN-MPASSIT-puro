@@ -151,6 +151,12 @@
 
  integer, public                       :: n_diag_fields
                                           !< number of fields read from the diag file
+ integer, public                       :: n_iso_levels
+                                          !< number of isobaric levels in diag file
+ real, allocatable, public             :: iso_levels_coord(:)
+                                          !< isobaric level values (Pa) read from diag file                                          
+                                          
+                                          
  type(esmf_fieldbundle), public        :: input_diag_bundle
                                           !< bundle to hold input diag fields
  type(esmf_fieldbundle), public        :: target_diag_bundle
