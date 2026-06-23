@@ -1,8 +1,8 @@
 # MyMONAN-MPASSIT-puro
-MPASSIT com minhasmodificações adaptadas para uso nas saídas do MONAN. Apenas sources aqui.
-Primeiro codigo puro, do jeito que veio do repositório original com poucas modificações para rodar na JACI@GNU + ESMF-8.9.0.
+MPASSIT com minhasmodificaÃ§Ãµes adaptadas para uso nas saÃ­das do MONAN. Apenas sources aqui.
+Primeiro codigo puro, do jeito que veio do repositÃ³rio original com poucas modificaÃ§Ãµes para rodar na JACI@GNU + ESMF-8.9.0.
 
-Posteriores modificações serão infomadas nesta pagina. 
+Posteriores modificaÃ§Ãµes serÃ£o infomadas nesta pagina. 
 
 
 
@@ -13,7 +13,7 @@ Posteriores modificações serão infomadas nesta pagina.
 source setenv_jaci_gnu_compile.bash
 ~~~
 
-- Tenha um ESMF (no minimo vers�o 8.3.0) compilada e disponivel.
+- Tenha um ESMF (no minimo versão 8.3.0) compilada e disponivel.
 
 - Variavel NETCDF deve estar declarada e apontada para o diretorio principal do NETCDF (isso ja esta feito no setenv).
 
@@ -27,9 +27,10 @@ compile.sh
 
 ### EXECUCAO:
 
-- Crie os arquivos necessarios para seu diretorio de rodada `run` (veja exemplos na pasta `parm`:
+- Crie os arquivos necessarios para seu diretorio de rodada `run` :
 ~~~
-diaglist                 --> namelist das variaveis a serem pos processadas
+varlist2d                 --> namelist das variaveis 2d a serem pos processadas (clonua1: nome da var do modelo, col2: nome da var no pos)
+varlist3d                 --> namelist das variaveis 3d a serem pos processadas (clonua1: nome da var do modelo, col2: nome da var no pos)
 namelist.input           --> namelist do mapssit com opcoes ja ajustadas para MONAN
 mpassit_submit.bash      --> script de submissao.
 mpassit                  --> executavel disponivel em `bin`
