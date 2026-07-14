@@ -271,48 +271,110 @@ subroutine fill_missing_field(localpet,in_field,out_field,nd,nx,ny,method, &
      if(ESMF_logFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__,file=__FILE__)) &
         call error_handler("IN FieldBundleRegrid", rc)
 
-     call fill_missing_bundle(localpet,input_diag_bundle,target_diag_bundle,2,i_target,j_target, &
-                               method,bilinear_regrid,unmapped_ptr_bi)
-
+   !CR: Preencher missing values campo a campo (bundle misto 2D/3D)
+     call fill_missing_diag(localpet,input_diag_bundle,target_diag_bundle, &
+                             i_target,j_target,method,bilinear_regrid,unmapped_ptr_bi)
   end subroutine interp_diag_data
+  
+  subroutine fill_missing_diag(localpet,in_bundle,out_bundle,nx,ny, &
+                               method,method_flag,unmapped_ptr)
+
+    implicit none
+
+    integer, intent(in)                          :: localpet, nx, ny
+    type(esmf_fieldbundle), intent(in)           :: in_bundle, out_bundle
+    type(ESMF_RegridMethod_Flag), intent(in)     :: method
+    type(logical), intent(inout)                 :: method_flag
+    integer(esmf_kind_i4), pointer, intent(inout):: unmapped_ptr(:)
+
+    type(esmf_field)                             :: field_in, field_out
+    integer                                      :: num_fields, i, dimCount, rc
+
+    call ESMF_FieldBundleGet(out_bundle, fieldCount=num_fields, rc=rc)
+    if(ESMF_logFoundError(rcToCheck=rc,msg=ESMF_LOGERR_PASSTHRU,line=__LINE__,file=__FILE__)) &
+        call error_handler("IN FieldBundleGet fill_missing_diag", rc)
+
+    do i = 1, num_fields
+        call ESMF_FieldBundleGet(in_bundle, i, field_in, rc=rc)
+        if(ESMF_logFoundError(rcToCheck=rc,msg=ESMF_LOGERR_PASSTHRU,line=__LINE__,file=__FILE__)) &
+            call error_handler("IN FieldBundleGet in_bundle", rc)
+        call ESMF_FieldBundleGet(out_bundle, i, field_out, rc=rc)
+        if(ESMF_logFoundError(rcToCheck=rc,msg=ESMF_LOGERR_PASSTHRU,line=__LINE__,file=__FILE__)) &
+            call error_handler("IN FieldBundleGet out_bundle", rc)
+
+        call ESMF_FieldGet(field_in, dimCount=dimCount, rc=rc)
+        if(ESMF_logFoundError(rcToCheck=rc,msg=ESMF_LOGERR_PASSTHRU,line=__LINE__,file=__FILE__)) &
+            call error_handler("IN FieldGet dimCount fill_missing_diag", rc)
+
+        ! dimCount para campo de malha: 1=2D, 2=3D
+        if (dimCount == 1) then
+            call fill_missing_field(localpet,field_in,field_out,2,nx,ny, &
+                                    method,method_flag,unmapped_ptr)
+        else
+            call fill_missing_field(localpet,field_in,field_out,3,nx,ny, &
+                                    method,method_flag,unmapped_ptr)
+        endif
+    enddo
+
+ end subroutine fill_missing_diag
 
   subroutine init_target_diag_fields(localpet)
 
     implicit none
 
     integer, intent(in)         :: localpet
-    integer                     :: i, rc
+    integer                     :: i, rc, dimCount
+    integer, allocatable          :: ungriddedLB(:), ungriddedUB(:)
     type(esmf_field)            :: diag_fields(n_diag_fields)
+    type(esmf_field), allocatable :: input_fields(:)
+
+! Obter campos do input bundle para espelhar dimensoes nao-grade
+    allocate(input_fields(n_diag_fields))
+    call ESMF_FieldBundleGet(input_diag_bundle, fieldList=input_fields, &
+                             itemorderflag=ESMF_ITEMORDER_ADDORDER, rc=rc)
+    if(ESMF_logFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__,file=__FILE__)) &
+        call error_handler("IN FieldBundleGet (input_diag_bundle)", rc)
 
     if (localpet==0) print*,"- INITIALIZE TARGET DIAG FIELDS."
     do i = 1, n_diag_fields
-        if (target_diag_names(i) == "REFL_10CM") then
-          if (localpet==0) print*, "- INIT FIELD ", target_diag_names(i)
-          diag_fields(i) = ESMF_FieldCreate(target_grid, &
-                            typekind=ESMF_TYPEKIND_R8, &
-                            staggerloc=ESMF_STAGGERLOC_CENTER, &
-                            ungriddedLBound=(/1/), &
-                            ungriddedUBound=(/nz_input/), &
-                            name=target_diag_names(i), rc=rc)
-          if(ESMF_logFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__,file=__FILE__))&
-          call error_handler("IN FieldCreate", rc)
+        call ESMF_FieldGet(input_fields(i), dimCount=dimCount, rc=rc)
+        if(ESMF_logFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__,file=__FILE__)) &
+            call error_handler("IN FieldGet dimCount", rc)
+        if (dimCount > 1) then
+            ! Campo 3D: espelhar ungriddedUBound do campo de entrada
+            allocate(ungriddedLB(1), ungriddedUB(1))
+            call ESMF_FieldGet(input_fields(i), ungriddedLBound=ungriddedLB, &
+                               ungriddedUBound=ungriddedUB, rc=rc)
+            if(ESMF_logFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__,file=__FILE__)) &
+                call error_handler("IN FieldGet ungriddedUBound", rc)
+            if (localpet==0) print*, "- INIT 3D FIELD ", trim(target_diag_names(i)), " nlevs=", ungriddedUB(1)
+            diag_fields(i) = ESMF_FieldCreate(target_grid, &
+                              typekind=ESMF_TYPEKIND_R8, &
+                              staggerloc=ESMF_STAGGERLOC_CENTER, &
+                              ungriddedLBound=ungriddedLB, &
+                              ungriddedUBound=ungriddedUB, &
+                              name=target_diag_names(i), rc=rc)
+            if(ESMF_logFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__,file=__FILE__)) &
+                call error_handler("IN FieldCreate 3D", rc)
+            deallocate(ungriddedLB, ungriddedUB)
         else
-          if (localpet==0) print*, "- INIT FIELD ", target_diag_names(i)
-          diag_fields(i) = ESMF_FieldCreate(target_grid, &
-                            typekind=ESMF_TYPEKIND_R8, &
-                            staggerloc=ESMF_STAGGERLOC_CENTER, &
-                            name=target_diag_names(i), rc=rc)
-          if(ESMF_logFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__,file=__FILE__)) &
-            call error_handler("IN FieldCreate", rc)
+            ! Campo 2D
+            if (localpet==0) print*, "- INIT 2D FIELD ", trim(target_diag_names(i))
+            diag_fields(i) = ESMF_FieldCreate(target_grid, &
+                              typekind=ESMF_TYPEKIND_R8, &
+                              staggerloc=ESMF_STAGGERLOC_CENTER, &
+                              name=target_diag_names(i), rc=rc)
+            if(ESMF_logFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__,file=__FILE__)) &
+                call error_handler("IN FieldCreate 2D", rc)
         endif
     enddo
 
+    deallocate(input_fields)
 
     target_diag_bundle = ESMF_FieldBundleCreate(fieldList=diag_fields, &
                                     name="target diag data", rc=rc)
     if(ESMF_logFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__,file=__FILE__)) &
         call error_handler("IN FieldBundleCreate", rc)
-
 
  end subroutine init_target_diag_fields
 

@@ -12,10 +12,12 @@ module load cray-parallel-netcdf/1.12.3.15
 module load xpmem/0.2.119-1.3_gef379be13330
 module load cray-pals
 module load METIS/5.1.0
-module list
+module load grads
+
 
 # NetCDF paralelo - NETCDF_DIR eh definido pelo modulo cray-netcdf-hdf5parallel
 export NETCDF=${NETCDF_DIR}
+export LD_LIBRARY_PATH=${NETCDF_DIR}/lib:${LD_LIBRARY_PATH}
 
 # Compiladores Cray
 export CMAKE_C_COMPILER=cc
