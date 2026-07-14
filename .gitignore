@@ -39,5 +39,4 @@ mpassit
 /run/*LogFile
 /run/*.nc
 /run/mpassit
-*.txt
 /run/*.err
